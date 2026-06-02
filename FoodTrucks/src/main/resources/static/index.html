@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Truck Finder</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search {
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 20px;
+            cursor: pointer;
+            border: none;
+            background: #2563eb;
+            color: white;
+            border-radius: 6px;
+        }
+
+        button:hover {
+            opacity: .9;
+        }
+
+        .restaurant {
+            margin-top: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .restaurant h3 {
+            margin: 0 0 8px;
+        }
+
+        .error {
+            color: red;
+            margin-top: 15px;
+        }
+
+        .loading {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Restaurantes Próximos</h1>
+
+    <div class="search">
+        <input
+                id="cep"
+                type="text"
+                placeholder="Digite o CEP"
+                maxlength="9"
+        />
+
+        <button onclick="buscarRestaurantes()">
+            Buscar
+        </button>
+    </div>
+
+    <div id="resultado"></div>
+
+</div>
+
+<script>
+
+    const API_URL = "http://localhost:8080/api/nearFF";
+
+    document.getElementById("cep").addEventListener("input", function(e) {
+
+        let valor = e.target.value.replace(/\D/g, "");
+
+        if (valor.length > 5) {
+            valor = valor.replace(/^(\d{5})(\d+)/, "$1-$2");
+        }
+
+        e.target.value = valor;
+    });
+
+    async function buscarRestaurantes() {
+
+        const cep = document
+            .getElementById("cep")
+            .value
+            .replace(/\D/g, "");
+
+        const resultado = document.getElementById("resultado");
+
+        if (cep.length !== 8) {
+            resultado.innerHTML =
+                '<p class="error">Digite um CEP válido.</p>';
+            return;
+        }
+
+        resultado.innerHTML =
+            '<p class="loading">Buscando restaurantes...</p>';
+
+        try {
+
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    cep: cep
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error("Erro na API");
+            }
+
+            const restaurantes = await response.json();
+
+            console.log("Resposta da API:", restaurantes);
+
+            if (!restaurantes || restaurantes.length === 0) {
+                resultado.innerHTML =
+                    "<p>Nenhum restaurante encontrado.</p>";
+                return;
+            }
+
+            resultado.innerHTML = restaurantes
+                .map(restaurante => `
+                    <div class="restaurant">
+                        <h3>${restaurante.name}</h3>
+                        <p>${restaurante.endereco}</p>
+                    </div>
+                `)
+                .join("");
+
+        } catch (erro) {
+
+            console.error(erro);
+
+            resultado.innerHTML = `
+                <p class="error">
+                    Erro ao consultar restaurantes.
+                </p>
+            `;
+        }
+    }
+
+</script>
+
+</body>
+</html>
