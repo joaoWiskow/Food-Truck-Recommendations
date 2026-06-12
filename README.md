@@ -1,4 +1,5 @@
-#Food-Truck-Recommendations
+Food-Truck-Recommendations
+
 API REST de recomendação de food trucks por localização, desenvolvida com Spring Boot 4 e integração com AWS GeoPlaces.
 Tecnologias
 Java 17
